@@ -5,7 +5,7 @@
 ARG BASEIMAGE=centos:7
 FROM $BASEIMAGE
 
-ENV PATH /usr/local/gradle/bin:/opt/rh/devtoolset-10/root/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PATH /usr/local/gradle/bin:/opt/rh/devtoolset-11/root/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ENV LANG=en_US.utf8
 ENV LC_ALL=en_US.utf8
 
