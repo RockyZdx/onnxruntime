@@ -3,11 +3,11 @@ set -e -x
 
 os_major_version=$(cat /etc/redhat-release | tr -dc '0-9.'|cut -d \. -f1)
 CPU_ARCH=`uname -m`
-PACKAGES_TO_INSTALL="which gdb redhat-lsb-core expat-devel tar unzip zlib-devel make libunwind  aria2  bzip2 bzip2-devel java-11-openjdk-devel graphviz devtoolset-10-binutils devtoolset-10-gcc devtoolset-10-gcc-c++ devtoolset-10-gcc-gfortran python3 python3-devel python3-pip"
+PACKAGES_TO_INSTALL="which gdb redhat-lsb-core expat-devel tar unzip zlib-devel make libunwind  aria2  bzip2 bzip2-devel java-11-openjdk-devel graphviz devtoolset-11-binutils devtoolset-11-gcc devtoolset-11-gcc-c++ devtoolset-11-gcc-gfortran python3 python3-devel python3-pip"
 if ! rpm -q --quiet epel-release ; then
 	if [[ "$CPU_ARCH" = "x86_64" ]]; then
 	  yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-$os_major_version.noarch.rpm https://repo.ius.io/ius-release-el$os_major_version.rpm
-	  PACKAGES_TO_INSTALL="$PACKAGES_TO_INSTALL git224"
+	  PACKAGES_TO_INSTALL="$PACKAGES_TO_INSTALL git236"
 	else
 	  yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-$os_major_version.noarch.rpm
 	  PACKAGES_TO_INSTALL="$PACKAGES_TO_INSTALL git"
