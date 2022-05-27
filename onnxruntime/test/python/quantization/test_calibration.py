@@ -62,12 +62,7 @@ class TestCalibrate(unittest.TestCase):
         E = helper.make_tensor_value_info("E", TensorProto.FLOAT, [1, 1, 5, 1])
         F = helper.make_tensor_value_info("F", TensorProto.FLOAT, [1, 1, 5, 1])
         conv_node = onnx.helper.make_node(
-            "Conv",
-            ["A", "B"],
-            ["C"],
-            name="Conv",
-            kernel_shape=[3, 3],
-            pads=[1, 1, 1, 1],
+            "Conv", ["A", "B"], ["C"], name="Conv", kernel_shape=[3, 3], pads=[1, 1, 1, 1],
         )
         clip_node = onnx.helper.make_node("Clip", ["C"], ["D"], name="Clip")
         matmul_node = onnx.helper.make_node("MatMul", ["D", "E"], ["F"], name="MatMul")
@@ -86,23 +81,47 @@ class TestCalibrate(unittest.TestCase):
         augmented_model_node_names = [node.name for node in augmented_model.graph.node]
         augmented_model_outputs = [output.name for output in augmented_model.graph.output]
         added_node_names = [
+            "A_ReduceMin",
+            "A_ReduceMax",
+            "B_ReduceMin",
+            "B_ReduceMax",
             "C_ReduceMin",
             "C_ReduceMax",
             "D_ReduceMin",
             "D_ReduceMax",
+            "E_ReduceMin",
+            "E_ReduceMax",
             "F_ReduceMin",
             "F_ReduceMax",
+            "A_ReduceMin_Reshape",
+            "A_ReduceMax_Reshape",
+            "B_ReduceMin_Reshape",
+            "B_ReduceMax_Reshape",
+            "C_ReduceMin_Reshape",
+            "C_ReduceMax_Reshape",
+            "D_ReduceMin_Reshape",
+            "D_ReduceMax_Reshape",
+            "E_ReduceMin_Reshape",
+            "E_ReduceMax_Reshape",
+            "F_ReduceMin_Reshape",
+            "F_ReduceMax_Reshape",
         ]
         added_outputs = [
+            "A_ReduceMin",
+            "A_ReduceMax",
+            "B_ReduceMin",
+            "B_ReduceMax",
             "C_ReduceMin",
             "C_ReduceMax",
             "D_ReduceMin",
             "D_ReduceMax",
+            "E_ReduceMin",
+            "E_ReduceMax",
             "F_ReduceMin",
             "F_ReduceMax",
         ]
         # Original 3 nodes + added ReduceMin/Max nodes
-        self.assertEqual(len(augmented_model_node_names), 15)
+        self.assertEqual(len(augmented_model_node_names), 27)
         # Original 1 graph output + added outputs * 6
         self.assertEqual(len(augmented_model_outputs), 13)
         for name in added_node_names:
@@ -121,20 +140,10 @@ class TestCalibrate(unittest.TestCase):
         J = helper.make_tensor_value_info("J", TensorProto.FLOAT, [1, 1, 3, 3])
         K = helper.make_tensor_value_info("K", TensorProto.FLOAT, [1, 1, 5, 5])
         conv_node_1 = onnx.helper.make_node(
-            "Conv",
-            ["G", "H"],
-            ["I"],
-            name="Conv1",
-            kernel_shape=[3, 3],
-            pads=[1, 1, 1, 1],
+            "Conv", ["G", "H"], ["I"], name="Conv1", kernel_shape=[3, 3], pads=[1, 1, 1, 1],
         )
         conv_node_2 = onnx.helper.make_node(
-            "Conv",
-            ["I", "J"],
-            ["K"],
-            name="Conv2",
-            kernel_shape=[3, 3],
-            pads=[1, 1, 1, 1],
+            "Conv", ["I", "J"], ["K"], name="Conv2", kernel_shape=[3, 3], pads=[1, 1, 1, 1],
         )
         graph = helper.make_graph([conv_node_1, conv_node_2], "test_graph_2", [G, H, J], [K])
         model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 13)])
@@ -149,9 +158,9 @@ class TestCalibrate(unittest.TestCase):
         augmented_model_outputs = [output.name for output in augmented_model.graph.output]
         added_node_names = ["I_ReduceMin", "I_ReduceMax", "K_ReduceMin", "K_ReduceMax"]
         added_outputs = ["I_ReduceMin", "I_ReduceMax", "K_ReduceMin", "K_ReduceMax"]
-        # Original 2 nodes + added ReduceMin/Max nodes * 4
-        self.assertEqual(len(augmented_model_node_names), 12)
-        # Original 1 graph output + added outputs * 4
+        # Original 2 nodes + (ReduceMin + Reshape, ReduceMax + Reshape) * 5 tensors
+        self.assertEqual(len(augmented_model_node_names), 22)
+        # Original 1 graph output + 5 tensors * 2
         self.assertEqual(len(augmented_model_outputs), 11)
         for name in added_node_names:
             self.assertTrue(name in augmented_model_node_names)
@@ -178,12 +187,7 @@ class TestCalibrate(unittest.TestCase):
         Q = helper.make_tensor_value_info("Q", TensorProto.FLOAT, [1, 1, 5, 5])
         relu_node = onnx.helper.make_node("Relu", ["L"], ["M"], name="Relu")
         conv_node = onnx.helper.make_node(
-            "Conv",
-            ["M", "N"],
-            ["O"],
-            name="Conv",
-            kernel_shape=[3, 3],
-            pads=[1, 1, 1, 1],
+            "Conv", ["M", "N"], ["O"], name="Conv", kernel_shape=[3, 3], pads=[1, 1, 1, 1],
         )
         clip_node = onnx.helper.make_node("Clip", ["O"], ["P"], name="Clip")
         matmul_node = onnx.helper.make_node("MatMul", ["P", "M"], ["Q"], name="MatMul")
@@ -202,16 +206,30 @@ class TestCalibrate(unittest.TestCase):
         added_node_names = [
             "M_ReduceMin",
             "M_ReduceMax",
+            "N_ReduceMin",
+            "N_ReduceMax",
             "O_ReduceMin",
             "O_ReduceMax",
             "P_ReduceMin",
             "P_ReduceMax",
             "Q_ReduceMin",
             "Q_ReduceMax",
+            "M_ReduceMin_Reshape",
+            "M_ReduceMax_Reshape",
+            "N_ReduceMin_Reshape",
+            "N_ReduceMax_Reshape",
+            "O_ReduceMin_Reshape",
+            "O_ReduceMax_Reshape",
+            "P_ReduceMin_Reshape",
+            "P_ReduceMax_Reshape",
+            "Q_ReduceMin_Reshape",
+            "Q_ReduceMax_Reshape",
         ]
         added_outputs = [
             "M_ReduceMin",
             "M_ReduceMax",
+            "N_ReduceMin",
+            "N_ReduceMax",
             "O_ReduceMin",
             "O_ReduceMax",
             "P_ReduceMin",
@@ -219,9 +237,9 @@ class TestCalibrate(unittest.TestCase):
             "Q_ReduceMin",
             "Q_ReduceMax",
         ]
-        # Original 4 nodes + added ReduceMin/Max nodes
-        self.assertEqual(len(augmented_model_node_names), 14)
-        # Original 1 graph output + added outputs
+        # Original 4 nodes + (ReduceMin + Reshape, ReduceMax + Reshape) * 5 tensors
+        self.assertEqual(len(augmented_model_node_names), 24)
+        # Original 1 graph output + 5 tensors * 2
         self.assertEqual(len(augmented_model_outputs), 11)
         for name in added_node_names:
             self.assertTrue(name in augmented_model_node_names)
@@ -289,9 +307,7 @@ class TestCalibrate(unittest.TestCase):
         sess_options = onnxruntime.SessionOptions()
         sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_DISABLE_ALL
         infer_session = onnxruntime.InferenceSession(
-            test_model_path,
-            sess_options=sess_options,
-            providers=["CPUExecutionProvider"],
+            test_model_path, sess_options=sess_options, providers=["CPUExecutionProvider"],
         )
         data_reader.rewind()
         rmin = np.array([np.inf, np.inf, np.inf, np.inf, np.inf, np.inf], dtype=np.float32)
@@ -319,35 +335,22 @@ class TestCalibrate(unittest.TestCase):
         #  Resize
 
         G = helper.make_tensor_value_info("G", TensorProto.FLOAT, [1, 1, 5, 5])
-        H = helper.make_tensor_value_info("H", TensorProto.FLOAT, [1, 1, 3, 3])
-        J = helper.make_tensor_value_info("J", TensorProto.FLOAT, [1, 1, 3, 3])
         M = helper.make_tensor_value_info("M", TensorProto.FLOAT, [0])
         N = helper.make_tensor_value_info("N", TensorProto.FLOAT, [0])
         O = helper.make_tensor_value_info("O", TensorProto.FLOAT, [1, 1, 5, 5])
         # O = helper.make_tensor_value_info('O', TensorProto.FLOAT, None)
         conv_node_1 = onnx.helper.make_node(
-            "Conv",
-            ["G", "H"],
-            ["I"],
-            name="Conv1",
-            kernel_shape=[3, 3],
-            pads=[1, 1, 1, 1],
+            "Conv", ["G", "conv1_w"], ["I"], name="Conv1", kernel_shape=[3, 3], pads=[1, 1, 1, 1],
         )
         conv_node_2 = onnx.helper.make_node(
-            "Conv",
-            ["I", "J"],
-            ["K"],
-            name="Conv2",
-            kernel_shape=[3, 3],
-            pads=[1, 1, 1, 1],
+            "Conv", ["I", "conv2_w"], ["K"], name="Conv2", kernel_shape=[3, 3], pads=[1, 1, 1, 1],
         )
         resize_node_1 = onnx.helper.make_node("Resize", ["K", "M", "N"], ["O"], name="Reize1")
-        graph = helper.make_graph(
-            [conv_node_1, conv_node_2, resize_node_1],
-            "test_graph_5",
-            [G, H, J, M, N],
-            [O],
-        )
+        graph = helper.make_graph([conv_node_1, conv_node_2, resize_node_1], "test_graph_5", [G, M, N], [O],)
+        conv1_w = generate_input_initializer([1, 1, 3, 3], np.float32, "conv1_w")
+        conv2_w = generate_input_initializer([1, 1, 3, 3], np.float32, "conv2_w")
+        graph.initializer.extend([conv1_w, conv2_w])
+
         model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 13)])
         test_model_path = "./test_model_5.onnx"
         onnx.save(model, test_model_path)
@@ -359,25 +362,49 @@ class TestCalibrate(unittest.TestCase):
         augmented_model_node_names = [node.name for node in augmented_model.graph.node]
         augmented_model_outputs = [output.name for output in augmented_model.graph.output]
         added_node_names = [
+            "G_ReduceMin",
+            "G_ReduceMax",
             "I_ReduceMin",
             "I_ReduceMax",
             "K_ReduceMin",
             "K_ReduceMax",
+            "M_ReduceMin",
+            "M_ReduceMax",
+            "N_ReduceMin",
+            "N_ReduceMax",
             "O_ReduceMin",
             "O_ReduceMax",
+            "G_ReduceMin_Reshape",
+            "G_ReduceMax_Reshape",
+            "I_ReduceMin_Reshape",
+            "I_ReduceMax_Reshape",
+            "K_ReduceMin_Reshape",
+            "K_ReduceMax_Reshape",
+            "M_ReduceMin_Reshape",
+            "M_ReduceMax_Reshape",
+            "N_ReduceMin_Reshape",
+            "N_ReduceMax_Reshape",
+            "O_ReduceMin_Reshape",
+            "O_ReduceMax_Reshape",
         ]
         added_outputs = [
+            "G_ReduceMin",
+            "G_ReduceMax",
             "I_ReduceMin",
             "I_ReduceMax",
             "K_ReduceMin",
             "K_ReduceMax",
+            "M_ReduceMin",
+            "M_ReduceMax",
+            "N_ReduceMin",
+            "N_ReduceMax",
             "O_ReduceMin",
             "O_ReduceMax",
         ]
-        # Original 3 nodes + added ReduceMin/Max nodes * 8
-        self.assertEqual(len(augmented_model_node_names), 19)
-        # Original 1 graph output + added outputs * 8
-        self.assertEqual(len(augmented_model_outputs), 17)
+        # Original 3 nodes + (ReduceMin + Reshape, ReduceMax + Reshape) * 6 tensors
+        self.assertEqual(len(augmented_model_node_names), 27)
+        # Original 1 graph output + 6 tensors * 2
+        self.assertEqual(len(augmented_model_outputs), 13)
         for name in added_node_names:
             self.assertTrue(name in augmented_model_node_names)
         for output in added_outputs:
